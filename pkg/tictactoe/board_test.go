@@ -54,3 +54,25 @@ func TestBoard_CheckResult(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestBoard_MakeMove(t *testing.T) {
+	for nMatch := 0; nMatch < 10; nMatch++ {
+		b := NewBoard()
+		for {
+			bestMove, err := b.CalcRandomMove()
+			if err != nil {
+				t.Fatal(err, b.String())
+			}
+			isValid := b.MakeMove(bestMove)
+			if !isValid {
+				t.Fatalf("board: %v, bestMove: %v", b.String(), bestMove)
+			}
+			//t.Log(b.String())
+			result := b.CheckResult()
+			//t.Logf("___________________________________________ %v", result)
+			if result != Playing {
+				break
+			}
+		}
+	}
+}

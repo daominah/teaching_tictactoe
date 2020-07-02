@@ -1,8 +1,15 @@
 package tictactoe
 
 import (
+	"errors"
+	"math/rand"
 	"strings"
+	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type Board struct {
 	isXTurn bool
@@ -102,4 +109,44 @@ func (b *Board) CheckResult() Result {
 		return Draw
 	}
 	return Playing
+}
+
+// :return : is valid move
+func (b *Board) MakeMove(sqrIdx int) bool {
+	if b.squares[sqrIdx] != PE {
+		return false
+	}
+	if b.isXTurn {
+		b.squares[sqrIdx] = PX
+		b.isXTurn = false
+		return true
+	}
+	b.squares[sqrIdx] = PO
+	b.isXTurn = true
+	return true
+}
+
+var (
+	ErrNoLegalMoves   = errors.New("no legal moves are available")
+	ErrNotImplemented = errors.New("not implemented")
+)
+
+// :return : square index
+func (b *Board) CalcRandomMove() (int, error) {
+	legals := b.CalcLegalMoves()
+	if len(legals) == 0 {
+		return 0, ErrNoLegalMoves
+	}
+	bestMove := legals[rand.Intn(len(legals))]
+	return bestMove, nil
+}
+
+// :return : square index
+func (b *Board) CalcBestMove() (int, error) {
+	legals := b.CalcLegalMoves()
+	if len(legals) == 0 {
+		return 0, ErrNoLegalMoves
+	}
+
+	return 0, ErrNotImplemented
 }
