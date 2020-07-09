@@ -10,9 +10,10 @@ type ZeroSumGame interface {
 	TakeBack()          // undo the last Move
 	// Evaluation can only be -1, 0 or 1 at the end of a game,
 	// but usually this func is a estimation value of a position (heuristic).
-	// For NegaMax to work, this funcmust return a score relative
+	// :returns[0] bool: isExact score (game over) or not
+	// For NegaMax to work, this func must return a score relative
 	// to the side to being evaluated.
-	Evaluate() float64
+	Evaluate() (bool, float64)
 	// Hash must be unique for a position,
 	// Forsyth-Edwards Notation can be used for human readable
 	Hash() string
@@ -40,15 +41,16 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 		goodMove = pos.BestMove
 	}
 
-	score := board.Evaluate()
-	allMoves := board.CalcLegalMoves()
-	if len(allMoves) == 0 {
-		posTable[posHash] = Transposition{IsTheEnd: true, Score: score}
+	isTheEnd, score := board.Evaluate()
+
+	if depth == 0 {
+		posTable[posHash] = Transposition{IsTheEnd: isTheEnd, Depth: 0, Score: score}
 		return score
 	}
 
-	if depth == 0 {
-		posTable[posHash] = Transposition{Depth: 0, Score: score}
+	allMoves := board.CalcLegalMoves()
+	if len(allMoves) == 0 {
+		posTable[posHash] = Transposition{IsTheEnd: true, Score: score}
 		return score
 	}
 

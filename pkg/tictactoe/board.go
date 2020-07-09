@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/daominah/teaching_tictactoe/pkg/minimax"
 )
 
 func init() {
@@ -14,6 +16,19 @@ func init() {
 type Board struct {
 	isXTurn bool
 	squares []Piece
+	history []Move
+}
+
+func NewBoard() *Board {
+	b := &Board{
+		isXTurn: true,
+		squares: make([]Piece, WIDTH*HEIGHT),
+		history: make([]Move, 0),
+	}
+	for i := 0; i < WIDTH*HEIGHT; i++ {
+		b.squares[i] = PE
+	}
+	return b
 }
 
 type Move struct {
@@ -46,39 +61,11 @@ const (
 	Playing Result = "Playing"
 )
 
-func NewBoard() *Board {
-	b := &Board{
-		isXTurn: true,
-		squares: make([]Piece, WIDTH*HEIGHT),
-	}
-	for i := 0; i < WIDTH*HEIGHT; i++ {
-		b.squares[i] = PE
-	}
-	return b
-}
-
-func (b *Board) String() string {
-	rowStrs := []string{""}
-	for row := 0; row < HEIGHT; row++ {
-		rowStr := make([]string, 0)
-		for col := 0; col < WIDTH; col++ {
-			sqrIdx := WIDTH*row + col
-			pieceStr := string(b.squares[sqrIdx])
-			if pieceStr == "" {
-				pieceStr = "."
-			}
-			rowStr = append(rowStr, pieceStr)
-		}
-		rowStrs = append(rowStrs, strings.Join(rowStr, " "))
-	}
-	return strings.Join(rowStrs, "\n")
-}
-
 func (b *Board) CalcLegalMoves() []Move {
 	legalMoves := make([]Move, 0)
 	for i := 0; i < WIDTH*HEIGHT; i++ {
 		if b.squares[i] == PE {
-			legalMoves = append(legalMoves, Move{target:i})
+			legalMoves = append(legalMoves, Move{target: i})
 		}
 	}
 	return legalMoves
@@ -134,6 +121,16 @@ func (b *Board) MakeMove(m Move) bool {
 	return true
 }
 
+func (b *Board) TakeBack() {
+	if len(b.history) < 1 {
+		return
+	}
+	lastMove := b.history[len(b.history)-1]
+	b.history = b.history[:len(b.history)-1]
+	b.squares[lastMove.target] = PE
+	b.isXTurn = !b.isXTurn
+}
+
 var (
 	ErrNoLegalMoves   = errors.New("no legal moves are available")
 	ErrNotImplemented = errors.New("not implemented")
@@ -157,4 +154,47 @@ func (b *Board) CalcBestMove() (int, error) {
 	}
 
 	return 0, ErrNotImplemented
+}
+
+func (b *Board) Evaluate() (bool, float64) {
+	result := b.CheckResult()
+	switch result {
+	case Win:
+		return true, 1
+	case Loss:
+		return true, -1
+	case Draw:
+		return true, 0
+	default: // playing
+		return false, 0
+	}
+}
+
+func (b *Board) String() string {
+	rowStrs := []string{""}
+	for row := 0; row < HEIGHT; row++ {
+		rowStr := make([]string, 0)
+		for col := 0; col < WIDTH; col++ {
+			sqrIdx := WIDTH*row + col
+			pieceStr := string(b.squares[sqrIdx])
+			if pieceStr == "" {
+				pieceStr = "."
+			}
+			rowStr = append(rowStr, pieceStr)
+		}
+		rowStrs = append(rowStrs, strings.Join(rowStr, " "))
+	}
+	return strings.Join(rowStrs, "\n")
+}
+
+func (b *Board) Hash() string {
+	return b.String()
+}
+
+func (m Move) CheckEqual(minimaxMove minimax.Move) bool {
+	tttMove, ok := minimaxMove.(Move)
+	if !ok {
+		return false
+	}
+	return m.target == tttMove.target
 }
