@@ -137,8 +137,15 @@ func CalcBestMove(board ZeroSumGame, depth int) Transposition {
 	}
 	Minimax(board, &stats, depth)
 	debug("nNodes: %v, nPoses: %v", stats.nNodes, len(stats.posTable))
-	log.Printf("nNodes: %v, nPoses: %v", stats.nNodes, len(stats.posTable))
 	bestMove := stats.posTable[board.Hash()]
+	if false { // debug zone
+		log.Printf("nNodes: %v, nPoses: %v\n", stats.nNodes, len(stats.posTable))
+		for k, v := range stats.posTable {
+			if v.Depth >= depth-1 {
+				log.Printf("__posTableRow %v: %#v", k, v)
+			}
+		}
+	}
 	return bestMove
 }
 

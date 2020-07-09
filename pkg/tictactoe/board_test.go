@@ -57,8 +57,8 @@ func TestBoard_CheckResult(t *testing.T) {
 
 func TestBoard_MakeMove_TakeBack(t *testing.T) {
 	b := NewBoard()
-	b.MakeMove(Move{target: 4})
-	b.MakeMove(Move{target: 1})
+	b.MakeMove(Move{Target: 4})
+	b.MakeMove(Move{Target: 1})
 	if len(b.history) != 2 {
 		t.Errorf("wrong history: %v", b.history)
 	}

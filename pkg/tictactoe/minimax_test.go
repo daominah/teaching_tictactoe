@@ -12,7 +12,7 @@ func Test_Minimax(t *testing.T) {
 		PO, PE, PO}
 	b.isXTurn = true
 	best := b.CalcBestMove()
-	if best.target != 5 {
+	if best.Target != 5 {
 		t.Error(best)
 	}
 }
@@ -20,12 +20,12 @@ func Test_Minimax(t *testing.T) {
 func Test_Minimax2(t *testing.T) {
 	b := NewBoard()
 	b.squares = []Piece{
-		PE, PO, PE,
-		PE, PX, PE,
+		PX, PE, PE,
+		PE, PE, PE,
 		PE, PE, PE}
-	b.isXTurn = true
+	b.isXTurn = false
 	best := b.CalcBestMove()
-	if best.target != 0 && best.target != 2 {
+	if best.Target != 4 {
 		t.Error(best)
 	}
 }
@@ -36,10 +36,10 @@ func Test_Minimax3(t *testing.T) {
 		PE, PE, PE,
 		PE, PX, PE,
 		PE, PE, PE}
-	b.isXTurn = true
+	b.isXTurn = false
 	best := b.CalcBestMove()
-	if best.target != 0 && best.target != 2 &&
-		best.target != 6 && best.target != 8 {
+	if best.Target != 0 && best.Target != 2 &&
+		best.Target != 6 && best.Target != 8 {
 		t.Error(best)
 	}
 }

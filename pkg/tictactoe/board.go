@@ -34,8 +34,8 @@ func NewBoard() *Board {
 }
 
 type Move struct {
-	// target square index
-	target int
+	// Target square index
+	Target int
 }
 
 type Piece string
@@ -70,7 +70,7 @@ func (b *Board) CalcLegalMoves() []Move {
 	legalMoves := make([]Move, 0)
 	for i := 0; i < WIDTH*HEIGHT; i++ {
 		if b.squares[i] == PE {
-			legalMoves = append(legalMoves, Move{target: i})
+			legalMoves = append(legalMoves, Move{Target: i})
 		}
 	}
 	return legalMoves
@@ -129,13 +129,13 @@ func (b *Board) CheckResult() Result {
 
 // :return : is valid move
 func (b *Board) MakeMove(m Move) bool {
-	if b.squares[m.target] != PE {
+	if b.squares[m.Target] != PE {
 		return false
 	}
 	if b.isXTurn {
-		b.squares[m.target] = PX
+		b.squares[m.Target] = PX
 	} else {
-		b.squares[m.target] = PO
+		b.squares[m.Target] = PO
 	}
 	b.isXTurn = !b.isXTurn
 	b.history = append(b.history, m)
@@ -148,7 +148,7 @@ func (b *Board) TakeBack() {
 	}
 	lastMove := b.history[len(b.history)-1]
 	b.history = b.history[:len(b.history)-1]
-	b.squares[lastMove.target] = PE
+	b.squares[lastMove.Target] = PE
 	b.isXTurn = !b.isXTurn
 }
 
@@ -171,13 +171,15 @@ func (b *Board) Evaluate() (bool, float64) {
 	result := b.CheckResult()
 	switch result {
 	case Win:
-		return true, 1
+		return true, 100
 	case Loss:
-		return true, -1
+		return true, -100
 	case Draw:
-		return true, 0
+		//return true, 0
+		return true, (float64(rand.Intn(4000) - 2000)) / 1000
 	default: // playing
-		return false, 0
+		//return false, 0
+		return false, (float64(rand.Intn(4000) - 2000)) / 1000
 	}
 }
 
@@ -224,7 +226,7 @@ func (m Move) CheckEqual(minimaxMove minimax.Move) bool {
 	if !ok {
 		return false
 	}
-	return m.target == tttMove.target
+	return m.Target == tttMove.Target
 }
 
 // :return : square index
