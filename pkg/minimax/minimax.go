@@ -5,9 +5,9 @@ import (
 )
 
 type ZeroSumGame interface {
-	CalcLegalMoves() []Move
-	MakeMove(Move) bool // return isValid
-	TakeBack()          // undo the last Move
+	ZCalcLegalMoves() []Move
+	ZMakeMove(Move) bool // return isValid
+	TakeBack()           // undo the last Move
 	// Evaluation can only be -1, 0 or 1 at the end of a game,
 	// but usually this func is a estimation value of a position (heuristic).
 	// :returns[0] bool: isExact score (game over) or not
@@ -48,7 +48,7 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 		return score
 	}
 
-	allMoves := board.CalcLegalMoves()
+	allMoves := board.ZCalcLegalMoves()
 	if len(allMoves) == 0 {
 		posTable[posHash] = Transposition{IsTheEnd: true, Score: score}
 		return score
@@ -68,7 +68,7 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 	max := -math.Inf(1)
 	maxMove := allMoves[0]
 	for _, move := range allMoves {
-		board.MakeMove(move)
+		board.ZMakeMove(move)
 		childScore := -NegaMax(board, posTable, depth-1)
 		board.TakeBack()
 		if childScore > max {

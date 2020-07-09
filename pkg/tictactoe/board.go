@@ -71,6 +71,15 @@ func (b *Board) CalcLegalMoves() []Move {
 	return legalMoves
 }
 
+func (b *Board) ZCalcLegalMoves() []minimax.Move {
+	moves := b.CalcLegalMoves()
+	ret := make([]minimax.Move, len(moves))
+	for i, _ := range moves {
+		ret[i] = moves[i]
+	}
+	return ret
+}
+
 func (b *Board) CheckResult() Result {
 	lines := [][]int{
 		[]int{0, 1, 2},
@@ -146,16 +155,6 @@ func (b *Board) CalcRandomMove() (Move, error) {
 	return bestMove, nil
 }
 
-// :return : square index
-func (b *Board) CalcBestMove() (int, error) {
-	legals := b.CalcLegalMoves()
-	if len(legals) == 0 {
-		return 0, ErrNoLegalMoves
-	}
-
-	return 0, ErrNotImplemented
-}
-
 func (b *Board) Evaluate() (bool, float64) {
 	result := b.CheckResult()
 	switch result {
@@ -191,10 +190,26 @@ func (b *Board) Hash() string {
 	return b.String()
 }
 
+func (b *Board) ZMakeMove(m minimax.Move) bool {
+	tttMove, ok := m.(Move)
+	if !ok {
+		return false
+	}
+	return b.MakeMove(tttMove)
+}
+
 func (m Move) CheckEqual(minimaxMove minimax.Move) bool {
 	tttMove, ok := minimaxMove.(Move)
 	if !ok {
 		return false
 	}
 	return m.target == tttMove.target
+}
+
+// :return : square index
+func (b *Board) CalcBestMove() Move {
+	best := minimax.CalcBestMove(b, 9)
+	bestMove := best.BestMove
+	tttMove, _ := bestMove.(Move)
+	return tttMove
 }
