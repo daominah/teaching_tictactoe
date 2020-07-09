@@ -107,8 +107,10 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 	posTable[hash] = Transposition{Score: bestScore, Depth: depth, BestMove: bestMove}
 	debug("fored: hash: %v, bestScore %v, bestMove: %v",
 		hash, bestScore, bestMove)
-	for k, v := range posTable {
-		debug("__posTableRow %v: %#v", k, v)
+	if false { // very heavy debug code
+		for k, v := range posTable {
+			debug("__posTableRow %v: %#v", k, v)
+		}
 	}
 	return bestScore
 
