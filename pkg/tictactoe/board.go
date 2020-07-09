@@ -64,6 +64,9 @@ const (
 )
 
 func (b *Board) CalcLegalMoves() []Move {
+	if b.CheckResult() != Playing {
+		return nil
+	}
 	legalMoves := make([]Move, 0)
 	for i := 0; i < WIDTH*HEIGHT; i++ {
 		if b.squares[i] == PE {
@@ -111,7 +114,14 @@ func (b *Board) CheckResult() Result {
 			}
 		}
 	}
-	if len(b.CalcLegalMoves()) == 0 {
+	isFullBoard := true
+	for _, p := range b.squares {
+		if p == PE {
+			isFullBoard = false
+			break
+		}
+	}
+	if isFullBoard {
 		return Draw
 	}
 	return Playing
@@ -124,9 +134,11 @@ func (b *Board) MakeMove(m Move) bool {
 	}
 	if b.isXTurn {
 		b.squares[m.target] = PX
-		return true
+	} else {
+		b.squares[m.target] = PO
 	}
-	b.squares[m.target] = PO
+	b.isXTurn = !b.isXTurn
+	b.history = append(b.history, m)
 	return true
 }
 
@@ -155,6 +167,7 @@ func (b *Board) CalcRandomMove() (Move, error) {
 	return bestMove, nil
 }
 
+// Evaluate for Negamax
 func (b *Board) Evaluate() (bool, float64) {
 	result := b.CheckResult()
 	switch result {

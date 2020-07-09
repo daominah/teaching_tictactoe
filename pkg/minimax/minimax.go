@@ -12,7 +12,8 @@ func init() {
 type ZeroSumGame interface {
 	ZCalcLegalMoves() []Move
 	ZMakeMove(Move) bool // return isValid
-	TakeBack()           // undo the last Move
+	// undo the last ZMakeMove
+	TakeBack() // undo the last Move
 	// Evaluation can only be -1, 0 or 1 at the end of a game,
 	// but usually this func is a estimation value of a position (heuristic).
 	// :returns[0] bool: isExact score (game over) or not
@@ -33,10 +34,10 @@ type Move interface {
 // NegaMax chessprogramming.org/Negamax,
 // :params board, posTable: are passed and modified by all recursion steps,
 func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 {
-	posHash := board.Hash()
+	hash := board.Hash()
 
 	var goodMove Move // best move in a shallow search
-	if pos, found := posTable[posHash]; found {
+	if pos, found := posTable[hash]; found {
 		if pos.IsTheEnd {
 			return pos.Score
 		}
@@ -48,36 +49,41 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 
 	isTheEnd, score := board.Evaluate()
 
+	if isTheEnd {
+		posTable[hash] = Transposition{IsTheEnd: true, Depth: depth, Score: score}
+		return score
+	}
+
 	if depth == 0 {
-		posTable[posHash] = Transposition{IsTheEnd: isTheEnd, Depth: 0, Score: score}
+		posTable[hash] = Transposition{Depth: 0, Score: score}
 		return score
 	}
 
-	allMoves := board.ZCalcLegalMoves()
-	log.Printf("depth: %v, allMoves: %v", depth, allMoves)
-	if len(allMoves) == 0 {
-		posTable[posHash] = Transposition{IsTheEnd: true, Score: score}
+	moves := board.ZCalcLegalMoves()
+	log.Printf("hash: %v, depth: %v, moves: %v", hash, depth, moves)
+	if len(moves) == 0 {
+		posTable[hash] = Transposition{IsTheEnd: true, Score: score}
 		return score
 	}
 
-	// reorder allMoves to get a better branch cut in Alpha-Beta,
+	// reorder moves to get a better branch cut in Alpha-Beta,
 	// does not help in this NegaMax though
 	if goodMove != nil {
-		for i, move := range allMoves {
+		for i, move := range moves {
 			if move.CheckEqual(goodMove) {
-				allMoves[0], allMoves[i] = allMoves[i], allMoves[0]
+				moves[0], moves[i] = moves[i], moves[0]
 				break
 			}
 		}
 	}
 
 	max := -math.Inf(1)
-	maxMove := allMoves[0]
-	for _, move := range allMoves {
-		log.Printf("board %v about to go child %v", board.Hash(), move)
+	maxMove := moves[0]
+	for _, move := range moves {
+		log.Printf("hash %v about to go child %v", board.Hash(), move)
 		board.ZMakeMove(move)
 		childScore := -NegaMax(board, posTable, depth-1)
-		log.Printf("child: %v, hashAfterChild: %v, score: %v, max: %v",
+		log.Printf(" hashAfterChild %v: %v, score: %v, oldMax: %v",
 			move, board.Hash(), childScore, max)
 		board.TakeBack()
 		if childScore > max {
@@ -85,10 +91,11 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 			maxMove = move
 		}
 	}
-	log.Printf("after for: max %v, maxMove: %v, allMoves: %v, hash: %v",
-		max, maxMove, allMoves, board.Hash())
-	log.Printf("posTable: %#v", posTable)
-	posTable[posHash] = Transposition{Score: max, Depth: depth, BestMove: maxMove}
+	posTable[hash] = Transposition{Score: max, Depth: depth, BestMove: maxMove}
+	log.Printf("fored: hash: %v, max %v, maxMove: %v", hash, max, maxMove)
+	for k, v := range posTable {
+		log.Printf("__posTableRow %v: %#v", k, v)
+	}
 	return max
 }
 
