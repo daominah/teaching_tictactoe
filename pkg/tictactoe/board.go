@@ -16,14 +16,21 @@ type Board struct {
 	squares []Piece
 }
 
+type Move struct {
+	// target square index
+	target int
+}
+
 type Piece string
 
+// enum Piece
 const (
 	PX Piece = "X"
 	PO Piece = "O"
 	PE Piece = "" // empty
 )
 
+// board size
 const (
 	WIDTH  = 3
 	HEIGHT = 3
@@ -31,6 +38,7 @@ const (
 
 type Result string
 
+// enum result of player who made the first move
 const (
 	Win     Result = "XWin"
 	Draw    Result = "XDraw"
@@ -66,11 +74,11 @@ func (b *Board) String() string {
 	return strings.Join(rowStrs, "\n")
 }
 
-func (b *Board) CalcLegalMoves() []int {
-	legalMoves := make([]int, 0)
+func (b *Board) CalcLegalMoves() []Move {
+	legalMoves := make([]Move, 0)
 	for i := 0; i < WIDTH*HEIGHT; i++ {
 		if b.squares[i] == PE {
-			legalMoves = append(legalMoves, i)
+			legalMoves = append(legalMoves, Move{target:i})
 		}
 	}
 	return legalMoves
@@ -112,16 +120,16 @@ func (b *Board) CheckResult() Result {
 }
 
 // :return : is valid move
-func (b *Board) MakeMove(sqrIdx int) bool {
-	if b.squares[sqrIdx] != PE {
+func (b *Board) MakeMove(m Move) bool {
+	if b.squares[m.target] != PE {
 		return false
 	}
 	if b.isXTurn {
-		b.squares[sqrIdx] = PX
+		b.squares[m.target] = PX
 		b.isXTurn = false
 		return true
 	}
-	b.squares[sqrIdx] = PO
+	b.squares[m.target] = PO
 	b.isXTurn = true
 	return true
 }
@@ -132,10 +140,10 @@ var (
 )
 
 // :return : square index
-func (b *Board) CalcRandomMove() (int, error) {
+func (b *Board) CalcRandomMove() (Move, error) {
 	legals := b.CalcLegalMoves()
 	if len(legals) == 0 {
-		return 0, ErrNoLegalMoves
+		return Move{}, ErrNoLegalMoves
 	}
 	bestMove := legals[rand.Intn(len(legals))]
 	return bestMove, nil

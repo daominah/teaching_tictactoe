@@ -61,16 +61,16 @@ func TestBoard_MakeMove(t *testing.T) {
 		for {
 			bestMove, err := b.CalcRandomMove()
 			if err != nil {
-				t.Fatal(err, b.String())
+				t.Fatal(err, b)
 			}
 			isValid := b.MakeMove(bestMove)
 			if !isValid {
-				t.Fatalf("board: %v, bestMove: %v", b.String(), bestMove)
+				t.Fatalf("board: %v, bestMove: %v", b, bestMove)
 			}
-			//t.Log(b.String())
 			result := b.CheckResult()
-			//t.Logf("___________________________________________ %v", result)
+			//t.Log(b)
 			if result != Playing {
+				//t.Logf("___________________________________________ %v", result)
 				break
 			}
 		}
