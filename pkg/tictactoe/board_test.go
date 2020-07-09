@@ -55,7 +55,27 @@ func TestBoard_CheckResult(t *testing.T) {
 	}
 }
 
-func TestBoard_MakeMove(t *testing.T) {
+func TestBoard_MakeMove_TakeBack(t *testing.T) {
+	b := NewBoard()
+	b.MakeMove(Move{target: 4})
+	b.MakeMove(Move{target: 1})
+	if len(b.history) != 2 {
+		t.Errorf("wrong history: %v", b.history)
+	}
+	b.TakeBack()
+	if len(b.history) != 1 {
+		t.Errorf("wrong history: %v", b.history)
+	}
+	if b.squares[1] != PE || b.squares[4] != PX {
+		t.Errorf("wrong TakeBack")
+	}
+	b.TakeBack()
+	if b.squares[4] != PE {
+		t.Errorf("wrong TakeBack")
+	}
+}
+
+func TestBoard_MakeRandomMove(t *testing.T) {
 	for nMatch := 0; nMatch < 10; nMatch++ {
 		b := NewBoard()
 		for {

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
 	"github.com/daominah/teaching_tictactoe/pkg/minimax"
 )
 
@@ -122,11 +124,9 @@ func (b *Board) MakeMove(m Move) bool {
 	}
 	if b.isXTurn {
 		b.squares[m.target] = PX
-		b.isXTurn = false
 		return true
 	}
 	b.squares[m.target] = PO
-	b.isXTurn = true
 	return true
 }
 
@@ -187,7 +187,12 @@ func (b *Board) String() string {
 }
 
 func (b *Board) Hash() string {
-	return b.String()
+	oneLine := strings.ReplaceAll(b.String(), "\n", "|")
+	turn := PX
+	if !b.isXTurn {
+		turn = PO
+	}
+	return fmt.Sprintf("%v|t%v", oneLine, turn)
 }
 
 func (b *Board) ZMakeMove(m minimax.Move) bool {
@@ -208,7 +213,8 @@ func (m Move) CheckEqual(minimaxMove minimax.Move) bool {
 
 // :return : square index
 func (b *Board) CalcBestMove() Move {
-	best := minimax.CalcBestMove(b, 9)
+	moves := b.CalcLegalMoves()
+	best := minimax.CalcBestMove(b, len(moves))
 	bestMove := best.BestMove
 	tttMove, _ := bestMove.(Move)
 	return tttMove

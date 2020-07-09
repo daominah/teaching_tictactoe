@@ -1,8 +1,13 @@
 package minimax
 
 import (
+	"log"
 	"math"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 type ZeroSumGame interface {
 	ZCalcLegalMoves() []Move
@@ -49,6 +54,7 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 	}
 
 	allMoves := board.ZCalcLegalMoves()
+	log.Printf("depth: %v, allMoves: %v", depth, allMoves)
 	if len(allMoves) == 0 {
 		posTable[posHash] = Transposition{IsTheEnd: true, Score: score}
 		return score
@@ -68,14 +74,20 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 	max := -math.Inf(1)
 	maxMove := allMoves[0]
 	for _, move := range allMoves {
+		log.Printf("board %v about to go child %v", board.Hash(), move)
 		board.ZMakeMove(move)
 		childScore := -NegaMax(board, posTable, depth-1)
+		log.Printf("child: %v, hashAfterChild: %v, score: %v, max: %v",
+			move, board.Hash(), childScore, max)
 		board.TakeBack()
 		if childScore > max {
 			max = childScore
 			maxMove = move
 		}
 	}
+	log.Printf("after for: max %v, maxMove: %v, allMoves: %v, hash: %v",
+		max, maxMove, allMoves, board.Hash())
+	log.Printf("posTable: %#v", posTable)
 	posTable[posHash] = Transposition{Score: max, Depth: depth, BestMove: maxMove}
 	return max
 }
