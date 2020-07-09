@@ -15,8 +15,6 @@ type ZeroSumGame interface {
 	// Evaluation can only be -1, 0 or 1 at the end of a game,
 	// but usually this func is a estimation value of a position (heuristic).
 	// :returns[0] bool: isExact score (game over) or not
-	// For Minimax to work, this func must return a score relative
-	// to the side to being evaluated.
 	Evaluate() (bool, float64)
 	// check whether if current turn is player who prefer max evaluation
 	IsMaxPlayerTurn() bool
