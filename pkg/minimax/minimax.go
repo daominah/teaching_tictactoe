@@ -34,7 +34,11 @@ type Move interface {
 // Minimax chessprogramming.org/Minimax,
 // :params posTable: are passed and modified by all recursion steps,
 // :params board: must be unchanged after recursion steps call MakeMove and TakeBack
-func Minimax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 {
+func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
+	defer func() {
+		stats.nNodes += 1
+	}()
+	posTable := stats.posTable
 	hash := board.Hash()
 
 	var goodMove Move // best move in a shallow search
@@ -86,7 +90,7 @@ func Minimax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 	for _, move := range moves {
 		debug("hash %v about to go child %v", board.Hash(), move)
 		board.ZMakeMove(move)
-		childScore := Minimax(board, posTable, depth-1)
+		childScore := Minimax(board, stats, depth-1)
 		debug("hashAfterChild %v: %v, score: %v, oldBest: %v",
 			move, board.Hash(), childScore, bestScore)
 		board.TakeBack()
@@ -103,7 +107,8 @@ func Minimax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 		}
 	}
 	posTable[hash] = Transposition{Score: bestScore, Depth: depth, BestMove: bestMove}
-	debug("fored: hash: %v, bestScore %v, bestMove: %v", hash, bestScore, bestMove)
+	debug("fored: hash: %v, bestScore %v, bestMove: %v",
+		hash, bestScore, bestMove)
 	for k, v := range posTable {
 		debug("__posTableRow %v: %#v", k, v)
 	}
@@ -126,14 +131,19 @@ type Transposition struct {
 }
 
 func CalcBestMove(board ZeroSumGame, depth int) Transposition {
-	posTable := make(map[string]Transposition, int(math.Pow(2, float64(depth))))
-	Minimax(board, posTable, depth)
-	bestMove := posTable[board.Hash()]
+	stats := Stats{
+		posTable: make(map[string]Transposition),
+		nNodes:   0,
+	}
+	Minimax(board, &stats, depth)
+	debug("nNodes: %v, nPoses: %v", stats.nNodes, len(stats.posTable))
+	log.Printf("nNodes: %v, nPoses: %v", stats.nNodes, len(stats.posTable))
+	bestMove := stats.posTable[board.Hash()]
 	return bestMove
 }
 
 var (
-	isDebug = true
+	isDebug = false
 	std     = log.New(os.Stderr, "", log.Lshortfile)
 )
 
@@ -141,4 +151,10 @@ func debug(format string, v ...interface{}) {
 	if isDebug {
 		std.Output(2, fmt.Sprintf(format, v...))
 	}
+}
+
+// Stats
+type Stats struct {
+	posTable TranspositionTable
+	nNodes   int
 }
