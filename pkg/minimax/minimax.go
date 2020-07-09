@@ -1,13 +1,11 @@
 package minimax
 
 import (
+	"fmt"
 	"log"
 	"math"
+	"os"
 )
-
-func init() {
-	log.SetFlags(log.Lshortfile)
-}
 
 type ZeroSumGame interface {
 	ZCalcLegalMoves() []Move
@@ -17,9 +15,11 @@ type ZeroSumGame interface {
 	// Evaluation can only be -1, 0 or 1 at the end of a game,
 	// but usually this func is a estimation value of a position (heuristic).
 	// :returns[0] bool: isExact score (game over) or not
-	// For NegaMax to work, this func must return a score relative
+	// For Minimax to work, this func must return a score relative
 	// to the side to being evaluated.
 	Evaluate() (bool, float64)
+	// check whether if current turn is player who prefer max evaluation
+	IsMaxPlayerTurn() bool
 	// Hash must be unique for a position,
 	// Forsyth-Edwards Notation can be used for human readable
 	Hash() string
@@ -31,9 +31,10 @@ type Move interface {
 	CheckEqual(Move) bool
 }
 
-// NegaMax chessprogramming.org/Negamax,
-// :params board, posTable: are passed and modified by all recursion steps,
-func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 {
+// Minimax chessprogramming.org/Minimax,
+// :params posTable: are passed and modified by all recursion steps,
+// :params board: must be unchanged after recursion steps call MakeMove and TakeBack
+func Minimax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 {
 	hash := board.Hash()
 
 	var goodMove Move // best move in a shallow search
@@ -60,14 +61,14 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 	}
 
 	moves := board.ZCalcLegalMoves()
-	log.Printf("hash: %v, depth: %v, moves: %v", hash, depth, moves)
+	debug("hash: %v, depth: %v, moves: %v", hash, depth, moves)
 	if len(moves) == 0 {
 		posTable[hash] = Transposition{IsTheEnd: true, Score: score}
 		return score
 	}
 
 	// reorder moves to get a better branch cut in Alpha-Beta,
-	// does not help in this NegaMax though
+	// does not help in this Minimax though
 	if goodMove != nil {
 		for i, move := range moves {
 			if move.CheckEqual(goodMove) {
@@ -77,26 +78,37 @@ func NegaMax(board ZeroSumGame, posTable TranspositionTable, depth int) float64 
 		}
 	}
 
-	max := -math.Inf(1)
-	maxMove := moves[0]
+	bestScore := math.Inf(1)
+	if board.IsMaxPlayerTurn() {
+		bestScore = math.Inf(-1)
+	}
+	bestMove := moves[0]
 	for _, move := range moves {
-		log.Printf("hash %v about to go child %v", board.Hash(), move)
+		debug("hash %v about to go child %v", board.Hash(), move)
 		board.ZMakeMove(move)
-		childScore := -NegaMax(board, posTable, depth-1)
-		log.Printf(" hashAfterChild %v: %v, score: %v, oldMax: %v",
-			move, board.Hash(), childScore, max)
+		childScore := Minimax(board, posTable, depth-1)
+		debug("hashAfterChild %v: %v, score: %v, oldBest: %v",
+			move, board.Hash(), childScore, bestScore)
 		board.TakeBack()
-		if childScore > max {
-			max = childScore
-			maxMove = move
+		if board.IsMaxPlayerTurn() {
+			if childScore > bestScore {
+				bestScore = childScore
+				bestMove = move
+			}
+		} else {
+			if childScore < bestScore {
+				bestScore = childScore
+				bestMove = move
+			}
 		}
 	}
-	posTable[hash] = Transposition{Score: max, Depth: depth, BestMove: maxMove}
-	log.Printf("fored: hash: %v, max %v, maxMove: %v", hash, max, maxMove)
+	posTable[hash] = Transposition{Score: bestScore, Depth: depth, BestMove: bestMove}
+	debug("fored: hash: %v, bestScore %v, bestMove: %v", hash, bestScore, bestMove)
 	for k, v := range posTable {
-		log.Printf("__posTableRow %v: %#v", k, v)
+		debug("__posTableRow %v: %#v", k, v)
 	}
-	return max
+	return bestScore
+
 }
 
 // TranspositionTable stores results of previously performed searches,
@@ -115,7 +127,18 @@ type Transposition struct {
 
 func CalcBestMove(board ZeroSumGame, depth int) Transposition {
 	posTable := make(map[string]Transposition, int(math.Pow(2, float64(depth))))
-	NegaMax(board, posTable, depth)
+	Minimax(board, posTable, depth)
 	bestMove := posTable[board.Hash()]
 	return bestMove
+}
+
+var (
+	isDebug = true
+	std     = log.New(os.Stderr, "", log.Lshortfile)
+)
+
+func debug(format string, v ...interface{}) {
+	if isDebug {
+		std.Output(2, fmt.Sprintf(format, v...))
+	}
 }

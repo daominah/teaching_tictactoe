@@ -167,7 +167,6 @@ func (b *Board) CalcRandomMove() (Move, error) {
 	return bestMove, nil
 }
 
-// Evaluate for Negamax
 func (b *Board) Evaluate() (bool, float64) {
 	result := b.CheckResult()
 	switch result {
@@ -214,6 +213,10 @@ func (b *Board) ZMakeMove(m minimax.Move) bool {
 		return false
 	}
 	return b.MakeMove(tttMove)
+}
+
+func (b *Board) IsMaxPlayerTurn() bool {
+	return b.isXTurn
 }
 
 func (m Move) CheckEqual(minimaxMove minimax.Move) bool {
