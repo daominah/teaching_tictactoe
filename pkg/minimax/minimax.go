@@ -53,7 +53,7 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 	isTheEnd, score := board.Evaluate()
 
 	if isTheEnd {
-		posTable[hash0] = Transposition{IsTheEnd: true, Depth: depth, Score: score}
+		posTable[hash0] = Transposition{IsTheEnd: true, Score: score}
 		return score
 	}
 
@@ -65,7 +65,7 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 	moves := board.ZCalcLegalMoves()
 	debug("hash0: %v, depth: %v, moves: %v", hash0, depth, moves)
 	if len(moves) == 0 {
-		posTable[hash0] = Transposition{IsTheEnd: true, Depth: depth, Score: score}
+		posTable[hash0] = Transposition{IsTheEnd: true, Score: score}
 		return score
 	}
 
