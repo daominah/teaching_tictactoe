@@ -90,7 +90,7 @@ func AlphaBeta(board ZeroSumGame, stats *Stats, depth int,
 				boundScore = childScore
 				boundMove = move
 				if boundScore >= beta { // skip remaining children, go to return
-					debug("β cut: hash0: %v child: %v, score: %v, β: %v",
+					debug("β cut for %v on child: %v, score: %v, β: %v",
 						hash0, move, boundScore, beta)
 					if i != len(moves)-1 {
 						isCutNode = true
@@ -103,7 +103,7 @@ func AlphaBeta(board ZeroSumGame, stats *Stats, depth int,
 				boundScore = childScore
 				boundMove = move
 				if boundScore <= alpha {
-					debug("α cut: hash0: %v child: %v, score: %v, α: %v",
+					debug("α cut for %v on child: %v, score: %v, α: %v",
 						hash0, move, boundScore, alpha)
 					if i != len(moves)-1 {
 						isCutNode = true
