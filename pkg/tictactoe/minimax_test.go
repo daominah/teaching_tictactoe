@@ -40,12 +40,17 @@ func Test_Minimax3(t *testing.T) {
 		PE, PE, PE}
 	b.isXTurn = false
 
-	stats := minimax.NewStats()
-	minimax.Minimax(b, stats, 999)
-	//t.Logf("nNodes: %v", stats.NNodes)
-	bm, _ := stats.PosTable[b.Hash()].BestMove.(Move)
-	if bm.Target != 0 && bm.Target != 2 && bm.Target != 6 && bm.Target != 8 {
-		t.Error(bm)
+	for i := 0; i < 5; i++ {
+		stats := minimax.NewStats()
+		minimax.Minimax(b, stats, 999)
+		if i == 0 {
+			t.Logf("nNodes: %v", stats.NNodes)
+		}
+		bm, _ := stats.PosTable[b.Hash()].BestMove.(Move)
+		//t.Logf("bestMove: %v", bm)
+		if bm.Target != 0 && bm.Target != 2 && bm.Target != 6 && bm.Target != 8 {
+			t.Error(bm)
+		}
 	}
 }
 
@@ -58,6 +63,6 @@ func Test_Minimax4(t *testing.T) {
 	b.isXTurn = true
 	stats := minimax.NewStats()
 	minimax.Minimax(b, stats, 9)
-	//t.Logf("nNodes: %v", stats.NNodes)
+	t.Logf("nNodes: %v", stats.NNodes)
 	//bm, _ := stats.PosTable[b.Hash()].BestMove.(Move)
 }

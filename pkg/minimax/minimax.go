@@ -37,10 +37,10 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 		stats.NNodes += 1
 	}()
 	posTable := stats.PosTable
-	hash := board.Hash()
+	hash0 := board.Hash()
 
 	var goodMove Move // best move in a shallow search
-	if pos, found := posTable[hash]; found {
+	if pos, found := posTable[hash0]; found {
 		if pos.IsTheEnd {
 			return pos.Score
 		}
@@ -53,19 +53,19 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 	isTheEnd, score := board.Evaluate()
 
 	if isTheEnd {
-		posTable[hash] = Transposition{IsTheEnd: true, Depth: depth, Score: score}
+		posTable[hash0] = Transposition{IsTheEnd: true, Depth: depth, Score: score}
 		return score
 	}
 
 	if depth == 0 {
-		posTable[hash] = Transposition{Depth: 0, Score: score}
+		posTable[hash0] = Transposition{Depth: 0, Score: score}
 		return score
 	}
 
 	moves := board.ZCalcLegalMoves()
-	debug("hash: %v, depth: %v, moves: %v", hash, depth, moves)
+	debug("hash0: %v, depth: %v, moves: %v", hash0, depth, moves)
 	if len(moves) == 0 {
-		posTable[hash] = Transposition{IsTheEnd: true, Score: score}
+		posTable[hash0] = Transposition{IsTheEnd: true, Depth: depth, Score: score}
 		return score
 	}
 
@@ -86,11 +86,12 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 	}
 	bestMove := moves[0]
 	for _, move := range moves {
-		debug("hash %v about to go child %v", board.Hash(), move)
 		board.ZMakeMove(move)
+		debug("go child %v of %v: %v",
+			move, !board.IsMaxPlayerTurn(), board.Hash())
 		childScore := Minimax(board, stats, depth-1)
-		debug("hashAfterChild %v: %v, score: %v, oldBest: %v",
-			move, board.Hash(), childScore, bestScore)
+		debug("score go child %v of %v: %v, score: %v",
+			move, !board.IsMaxPlayerTurn(), board.Hash(), childScore)
 		board.TakeBack()
 		if board.IsMaxPlayerTurn() {
 			if childScore > bestScore {
@@ -104,16 +105,15 @@ func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 			}
 		}
 	}
-	posTable[hash] = Transposition{Score: bestScore, Depth: depth, BestMove: bestMove}
-	debug("fored: hash: %v, bestScore %v, bestMove: %v",
-		hash, bestScore, bestMove)
+	posTable[hash0] = Transposition{Score: bestScore, Depth: depth, BestMove: bestMove}
+	debug("fored: hash0: %v, bestScore %v, bestMove: %v",
+		hash0, bestScore, bestMove)
 	if false { // very heavy debug code
 		for k, v := range posTable {
 			debug("__posTableRow %v: %#v", k, v)
 		}
 	}
 	return bestScore
-
 }
 
 // TranspositionTable stores results of previously performed searches,
@@ -128,6 +128,9 @@ type Transposition struct {
 	Score    float64
 	Depth    int  // meaningless if (IsTheEnd == true)
 	BestMove Move // meaningless if (IsTheEnd == true) or (Depth == 0)
+	// only for AlphaBeta, if IsCutNode, fields Score and BestMove is not true,
+	// they are just a bound because we did not go all children
+	IsCutNode bool
 }
 
 func CalcBestMove(board ZeroSumGame, depth int) Transposition {
@@ -146,13 +149,14 @@ func CalcBestMove(board ZeroSumGame, depth int) Transposition {
 	return bestMove
 }
 
+// debug vars, users do not need to care
 var (
-	isDebug = false
+	IsDebug = false
 	std     = log.New(os.Stderr, "", log.Lshortfile)
 )
 
 func debug(format string, v ...interface{}) {
-	if isDebug {
+	if IsDebug {
 		std.Output(2, fmt.Sprintf(format, v...))
 	}
 }
