@@ -2,6 +2,8 @@ package tictactoe
 
 import (
 	"testing"
+
+	"github.com/daominah/teaching_tictactoe/pkg/minimax"
 )
 
 func Test_Minimax(t *testing.T) {
@@ -37,9 +39,25 @@ func Test_Minimax3(t *testing.T) {
 		PE, PX, PE,
 		PE, PE, PE}
 	b.isXTurn = false
-	best := b.CalcBestMove()
-	if best.Target != 0 && best.Target != 2 &&
-		best.Target != 6 && best.Target != 8 {
-		t.Error(best)
+
+	stats := minimax.NewStats()
+	minimax.Minimax(b, stats, 999)
+	//t.Logf("nNodes: %v", stats.NNodes)
+	bm, _ := stats.PosTable[b.Hash()].BestMove.(Move)
+	if bm.Target != 0 && bm.Target != 2 && bm.Target != 6 && bm.Target != 8 {
+		t.Error(bm)
 	}
+}
+
+func Test_Minimax4(t *testing.T) {
+	b := NewBoard()
+	b.squares = []Piece{
+		PE, PE, PE,
+		PE, PE, PE,
+		PE, PE, PE}
+	b.isXTurn = true
+	stats := minimax.NewStats()
+	minimax.Minimax(b, stats, 9)
+	//t.Logf("nNodes: %v", stats.NNodes)
+	//bm, _ := stats.PosTable[b.Hash()].BestMove.(Move)
 }

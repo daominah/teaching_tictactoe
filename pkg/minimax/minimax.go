@@ -30,13 +30,13 @@ type Move interface {
 }
 
 // Minimax chessprogramming.org/Minimax,
-// :params posTable: are passed and modified by all recursion steps,
+// :params PosTable: are passed and modified by all recursion steps,
 // :params board: must be unchanged after recursion steps call MakeMove and TakeBack
 func Minimax(board ZeroSumGame, stats *Stats, depth int) float64 {
 	defer func() {
-		stats.nNodes += 1
+		stats.NNodes += 1
 	}()
-	posTable := stats.posTable
+	posTable := stats.PosTable
 	hash := board.Hash()
 
 	var goodMove Move // best move in a shallow search
@@ -131,16 +131,13 @@ type Transposition struct {
 }
 
 func CalcBestMove(board ZeroSumGame, depth int) Transposition {
-	stats := Stats{
-		posTable: make(map[string]Transposition),
-		nNodes:   0,
-	}
-	Minimax(board, &stats, depth)
-	debug("nNodes: %v, nPoses: %v", stats.nNodes, len(stats.posTable))
-	bestMove := stats.posTable[board.Hash()]
+	stats := NewStats()
+	Minimax(board, stats, depth)
+	debug("NNodes: %v, nPoses: %v", stats.NNodes, len(stats.PosTable))
+	bestMove := stats.PosTable[board.Hash()]
 	if false { // debug zone
-		log.Printf("nNodes: %v, nPoses: %v\n", stats.nNodes, len(stats.posTable))
-		for k, v := range stats.posTable {
+		log.Printf("NNodes: %v, nPoses: %v\n", stats.NNodes, len(stats.PosTable))
+		for k, v := range stats.PosTable {
 			if v.Depth >= depth-1 {
 				log.Printf("__posTableRow %v: %#v", k, v)
 			}
@@ -160,8 +157,17 @@ func debug(format string, v ...interface{}) {
 	}
 }
 
-// Stats
+// Stats stores results of all search steps,
+// the most important field is TranspositionTable,
+// others fields is used for measuring performance.
 type Stats struct {
-	posTable TranspositionTable
-	nNodes   int
+	PosTable TranspositionTable
+	NNodes   int
+}
+
+func NewStats() *Stats {
+	return &Stats{
+		PosTable: make(map[string]Transposition),
+		NNodes:   0,
+	}
 }
